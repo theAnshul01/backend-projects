@@ -8,7 +8,7 @@ export function addTask(description: string): void {
         1 :
         Math.max(...tasks.map((t) => t.id)) + 1;
 
-    const now = new Date().toISOString();
+    const now = new Date().toLocaleString();
 
     const newTask: Task = {
         id: nextId,
@@ -97,7 +97,20 @@ export function setStatus(id:number, newStatus: Task["status"]): void {
     
 }
 
+const VALID_STATUSES = ["todo", "in-progress", "done"] as const;
+
+type Status = (typeof VALID_STATUSES)[number];
+
+function isValidStatus(value: string): value is Status { // "value is Status" is type predicate, if this function return, narrow down the type of the value to "Status"
+    return (VALID_STATUSES as readonly string[]).includes(value);
+}
+
 export function listTasks(statusFilter?: string): void{
+
+    if(statusFilter && !isValidStatus(statusFilter)){
+        console.log(`Invalid status: "${statusFilter}". Use one of ${VALID_STATUSES.join(", ")}`);
+        return;
+    }
     const tasks = readTask();
 
     const filtered = statusFilter

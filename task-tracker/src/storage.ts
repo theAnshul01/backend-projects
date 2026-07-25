@@ -10,7 +10,13 @@ export function readTask() : Task [] {
 
     const raw = fs.readFileSync(FILE_PATH, "utf-8");
 
-    return JSON.parse(raw) as Task[];
+    try {
+        return JSON.parse(raw) as Task[];
+    } catch (error) {
+        console.error(`Error: tasks.json is not valid JSON. Fix or delete the file and try again.`);
+        process.exit(1);
+    }
+    
 }
 
 export function writeTask(tasks: Task[]): void {
