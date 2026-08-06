@@ -6,8 +6,8 @@ export interface Expense {
     category?: string;
 }
 
-export interface DataFile {
-    expenses: Expense[];
-    budgets: Record<number, number>;
-    nextId: number;
+export interface Budget {
+    year: number;
+    month: string;
+    amount: number;
 }

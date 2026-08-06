@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { loadExpenses, getNextId, saveExpenses } from "./storage";
-import { Expense } from "./types";
+import { loadExpenses, getNextId, saveExpenses, loadBudget, saveBudget } from "./storage";
+import { Budget, Expense } from "./types";
 
 const program = new Command();
 
@@ -9,6 +9,8 @@ program
     .name("expense-tracker")
     .description("A simple CLI to track your expenses")
     .version("1.0.0")
+
+const MONTHS: string[] = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 program
     .command("add")
@@ -19,7 +21,13 @@ program
     .action((options) => {
         const description: string = options.description.trim();
         const amount: number = Number(options.amount)
-        const category: string = options.category.trim();
+        const category: string = options.category?.trim();
+        const month: string = new Date().toISOString().slice(5,7);
+        
+        const fullMonthName = MONTHS.at(Number(month)-1);
+        const shortMonthName = MONTHS.at(Number(month) + 11);
+        
+
 
         if(description.length === 0){
             console.error("Error: description cannot be empty")
@@ -33,6 +41,19 @@ program
         }
 
         const expenses = loadExpenses();
+        const budget = loadBudget();
+
+        const filteredBudget: Budget[] = budget.filter((e) => (e.month.toUpperCase() === fullMonthName) || (e.month.toUpperCase() === shortMonthName))
+        
+        const allowedBudget: number = filteredBudget.reduce((sum, e) => sum + e.amount, 0);
+
+        const filteredExpenses = expenses.filter((e) =>  e.date.slice(5,7) === month )
+       
+        const sum = filteredExpenses.reduce((sum, e) => sum + e.amount, 0)
+        
+        if(sum + amount > allowedBudget){
+            console.log(`Warning: Expenses: $${sum + amount} exceeded the budget: $${allowedBudget} for the month: ${shortMonthName}.`)
+        }
 
         const newExpense: Expense = {
             id: getNextId(expenses),
@@ -213,5 +234,114 @@ program
         console.log(`Total expenses for ${monthName} : $${total}`);
 
     });
+
+
+
+program.
+    command("budget")
+    .description("Add/Update budget for a month")
+    .requiredOption("-m, --month <month>", "Full month name or short month name of the current year")
+    .requiredOption("-a, --amount <budget>" , "budget for the month")
+    .action((options) => {
+        const budget = loadBudget();
+
+        const month: string = options.month.trim();
+        const budgetAmount: number = Number(options.amount);
+
+        if(Number.isNaN(budgetAmount) || budgetAmount <= 0){
+            console.log("Budget Amount should be a positive number");
+            process.exitCode = 1;
+            return;
+        }
+
+        if(!MONTHS.includes(month.toUpperCase())){
+            console.log(`Not a valid month of the year: ${month}, use a valid month`)
+            process.exitCode = 1;
+            return;
+        }
+
+        const monthBudget = budget.find((e) => e.month === month);
+        if(monthBudget){
+            console.log(`Budget already exist for the month: ${month}. You can only update it.`);
+            console.log(monthBudget);
+            process.exitCode = 1;
+            return;
+        }
+
+        const newBudget: Budget = {
+            year: new Date().getFullYear(),
+            month: month,
+            amount: budgetAmount,
+        }
+
+        budget.push(newBudget);
+        saveBudget(budget);
+
+        console.log(`Budget added successfully. month: ${month} budget: ${budgetAmount}`);
+
+    })
+
+program
+    .command("list-budget")
+    .description("list the budgets")
+    .action(() => {
+        const budget = loadBudget();
+        if(budget.length === 0){
+            console.log("No budget found.")
+            return;
+        }
+
+        const yearWidth = 6;
+        const monthWidth = Math.max(8, ...budget.map((b) => b.month.length)) + 2
+        const budgetWidth = Math.max(6, ...budget.map((b) => `${b.amount}`.length)) + 2
+
+        console.log(
+            "Year".padEnd(yearWidth) + 
+            "Month".padEnd(monthWidth) +
+            "Budget".padEnd(budgetWidth)
+        )
+        console.log("------------------------")
+
+        for(const b of budget){
+            console.log(
+                `${b.year}`.padEnd(yearWidth) +
+                b.month.padEnd(monthWidth) +
+                `${b.amount}`
+                
+            )
+        }
+    })
+    
+
+program
+    .command("update-budget")
+    .requiredOption("-m, --month <month>", "full month name of the current year")
+    .requiredOption("-a, --amount <amount>", "budget amount for the month")
+    .action((options) => {
+        const month: string = options.month;
+        const updatedAmount: number = Number(options.amount);
+
+        if(Number.isNaN(updatedAmount) || updatedAmount < 0 || updatedAmount === undefined){
+            console.log("amount should be a positive number");
+            process.exitCode = 1;
+            return;
+        }
+
+        const budget = loadBudget();
+
+        const monthBudget = budget.find((b) => b.month === month)
+        if(!monthBudget){
+            console.log(`Budget for the month: ${month} does not exists.`)
+            process.exitCode = 1;
+            return;
+        }
+
+        monthBudget["amount"] = updatedAmount;
+
+        saveBudget(budget);
+
+        console.log(`budget amount updated to ${updatedAmount} for the month: ${month} ${new Date().getFullYear()}`);
+
+    })
 
 program.parse(process.argv);
