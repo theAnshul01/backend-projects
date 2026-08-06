@@ -15,16 +15,17 @@ program
     .description("Add a new expense")
     .requiredOption("-d, --description <description>", "description of the expense")
     .requiredOption("-a, --amount <amount>", "amount spent")
+    .option("-c, --category <category>", "category")
     .action((options) => {
         const description: string = options.description.trim();
         const amount: number = Number(options.amount)
+        const category: string = options.category.trim();
 
         if(description.length === 0){
             console.error("Error: description cannot be empty")
             process.exitCode = 1;
             return;
         }
-
         if(Number.isNaN(amount) || amount <= 0){
             console.error("Error: amount must be a positive number.")
             process.exitCode = 1;
@@ -38,6 +39,7 @@ program
             date: new Date().toISOString().slice(0,10),
             description,
             amount,
+            category
         };
 
         expenses.push(newExpense);
@@ -50,31 +52,42 @@ program
 program
     .command("list")
     .description("List all expenses")
-    .action(() => {
+    .option("-f, --filter <filter>", "filter expenses by category")
+    .action((options) => {
         const expenses = loadExpenses();
 
         if (expenses.length === 0) {
             console.log("No expense found.");
             return;
         }
+        let filteredExpenses: Expense[] = []
+        if(options.filter){
+            filteredExpenses = expenses.filter((e) => e.category === options.filter)
+        } else {
+            filteredExpenses = expenses
+        }
+
 
         const idWidth = 5;
         const dateWidth = 12;
-        const descWidth = Math.max(11, ...expenses.map((e) => e.description.length)) + 2;
+        const descWidth = Math.max(11, ...filteredExpenses.map((e) => e.description.length)) + 2;
+        const amountWidth = Math.max(6, ...filteredExpenses.map((e) => `${e.amount}`.length)) + 2;
 
         console.log(
             "ID".padEnd(idWidth) + 
             "Date".padEnd(dateWidth) + 
             "Description".padEnd(descWidth) +
-            "Amount"
+            "Amount".padEnd(amountWidth) +
+            "Category"
         )
 
-        for (const expense of expenses) {
+        for (const expense of filteredExpenses) {
             console.log(
                 String(expense.id).padEnd(idWidth) +
                 expense.date.padEnd(dateWidth) +
                 expense.description.padEnd(descWidth) + 
-                `${expense.amount}`
+                `${expense.amount}`.padEnd(amountWidth) +
+                `${expense.category ? expense.category : "-"}`
             )
         }
 
