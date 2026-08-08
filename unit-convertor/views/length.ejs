@@ -1,0 +1,43 @@
+<%- include('partials/header') %>
+
+<h2>Length Converter</h2>
+
+<form method="POST" action="/length">
+    <label>
+        Value:
+        <input type="number" name="value" step="any" required value="<%= locals.value ?? '' %>">
+    </label>
+
+    <label>
+        From:
+        <select name="from" required>
+            <% units.forEach((unit) => { %>
+                <option value="<%= unit %>" <%= locals.from === unit ? 'selected' : ''%>>
+                    <%= unit %>
+                </option>
+            <% }) %>
+        </select>
+    </label>
+
+    <label>
+        To:
+        <select name="to" required>
+            <% units.forEach(function(unit) { %>
+                <option value="<%= unit %>" <%=locals.to===unit ? 'selected' : '' %>><%= unit %>
+                </option>
+                <% }); %>
+        </select>
+    </label>
+
+    <button type="submit">Convert</button>
+</form>
+
+<% if (locals.result !==undefined) { %>
+    <p><strong>Result: <%= result %><%= to %></strong></p>
+<% } %>
+
+<% if (locals.error) { %>
+    <p style="color: red;"><%= error %></p>
+<% } %>
+
+<%- include('partials/footer') %>
