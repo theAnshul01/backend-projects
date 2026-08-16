@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "date": "2026-08-10T09:00:00.000Z",
+    "title": "Getting Started with Express and TypeScript",
+    "content": "Express pairs nicely with TypeScript once you add @types/express. This article walks through setting up a basic server, adding middleware, and wiring up EJS as the view engine."
+  },
+  {
+    "id": 2,
+    "date": "2026-08-12T14:30:00.000Z",
+    "title": "Why I'm Building a Personal Blog",
+    "content": "I wanted a small full-stack project to practice routing, templating, and basic file-based persistence before reaching for a database. This blog app covers CRUD, routing params, and form handling."
+  },
+  {
+    "id": 3,
+    "date": "2026-08-15T18:45:00.000Z",
+    "title": "Notes on File-Based Storage",
+    "content": "Storing articles in a JSON file is a simple way to persist data without a database. It's not production-grade, but it's great for learning read/write patterns before moving to something like SQLite or Postgres."
+  }
+]
