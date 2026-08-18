@@ -1,11 +1,5 @@
 [
   {
-    "id": 1,
-    "date": "2026-08-10T09:00:00.000Z",
-    "title": "Getting Started with Express and TypeScript",
-    "content": "Express pairs nicely with TypeScript once you add @types/express. This article walks through setting up a basic server, adding middleware, and wiring up EJS as the view engine."
-  },
-  {
     "id": 2,
     "date": "2026-08-12T14:30:00.000Z",
     "title": "Why I'm Building a Personal Blog",

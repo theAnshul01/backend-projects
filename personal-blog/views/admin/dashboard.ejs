@@ -1,0 +1,23 @@
+<h1>Admin Dashboard</h1>
+
+<main>
+<% articles.forEach((article, index) => { %>
+    <h2><%= index %> - <%= article.title %></h2>
+    <p><%= article.content.slice(0,30) %>...</p>
+    <i><%= article.date.slice(0,10) %></i>
+    <form method="GET" action="/article/<%= article.id %>" style="display: inline;">
+        <button>Read more...</button>
+    </form>
+    <form method="GET" action="/admin/articles/<%= article.id %>/edit" style="display: inline;">
+        <button type="submit">Edit</button>
+    </form>
+    <form method="POST" action="/admin/articles/<%= article.id %>/delete" style="display: inline;">
+        <button type="submit">Delete</button>
+    </form>
+
+<% }) %>
+</main>
+
+<aside>
+    <a href="/admin/articles/add">Write an article</a>
+</aside>
