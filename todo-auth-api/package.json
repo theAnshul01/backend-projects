@@ -1,0 +1,31 @@
+{
+  "name": "todo-auth-api",
+  "version": "1.0.0",
+  "description": "a project to practice auth methods",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch src/server.ts",
+    "build" : "tsc",
+    "start": "node dist/server.js"
+  },
+  "keywords": [
+    "authentication",
+    "auth",
+    "jwt",
+    "session",
+    "cookie"
+  ],
+  "author": "Anshul Porwal",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.5.0",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}
