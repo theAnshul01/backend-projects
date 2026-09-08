@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getNextId, readDatabase, writeDatabase } from "../todoStore.js";
+import { getNextId, readDatabase, writeDatabase } from "../dataStore.js";
 
 const router = Router();
 
@@ -34,9 +34,9 @@ router.post("/", (req, res) => {
 router.patch("/:id", (req, res) => {
     const id = Number(req.params.id);
     const data = readDatabase();
-    const todo = data.todos.find(t => t.id===id);
-    if(!todo){
-        res.json({"error" : "todo item not found"});
+    const todo = data.todos.find(t => t.id === id);
+    if (!todo) {
+        res.json({ "error": "todo item not found" });
         return;
     }
 
@@ -46,16 +46,15 @@ router.patch("/:id", (req, res) => {
 
     writeDatabase(data);
 
-    res.json({"message" : "todo item updated"});
-    return;
+    res.json({ "message": "todo item updated" });
 })
 
 router.delete("/:id", (req, res) => {
     const id = Number(req.params.id);
     const data = readDatabase();
-    const idx = data.todos.findIndex(d => d.id===id);
-    if(idx === -1){
-        res.json({"error" : "todo item not found"})
+    const idx = data.todos.findIndex(d => d.id === id);
+    if (idx === -1) {
+        res.json({ "error": "todo item not found" })
         return;
     }
     data.todos.splice(idx, 1);
