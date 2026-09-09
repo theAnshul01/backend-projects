@@ -1,7 +1,8 @@
+import type { Request, Response, NextFunction } from "express";
 import { findUserByUsername } from "../dataStore.js";
 import { verifyPassword } from "./password.js";
 
-export function basicAuth(req, res, next){
+export function basicAuth(req: Request, res: Response, next: NextFunction){
     const authHeader = req.headers.authorization;
 
     if(!authHeader){
