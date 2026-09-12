@@ -84,7 +84,7 @@ router.post("/session/login", (req, res) => {
     const { username, password } = req.body;
 
     if(!username || !password){
-        res.status(401).json({
+        res.status(400).json({
             error: "username and password are required.",
         });
         return;
@@ -112,9 +112,20 @@ router.post("/session/login", (req, res) => {
 
     // res.cookie("sessionId", session.id); // TODO: cookie-parser is required for this
 
+    const isProduction = process.env.NODE_ENV === "production";
+
+    const cookie = [
+        `sessionId=${session.id}`,
+        "HttpOnly",
+        "SameSite=Lax",
+        "Max-Age=604800",
+        ...(isProduction ? ["Secure"] : [])
+    ].join("; ");
+
+
     res.setHeader(
         "Set-Cookie",
-        `sessionId=${session.id}`
+        cookie
     )
 
     res.json({
@@ -141,7 +152,7 @@ router.post("/session/logout", (req, res) => {
 
     res.setHeader(
         "Set-Cookie",
-        "sessionId=; Max-Age=0"
+        "sessionId=; HttpOnly; SameSite=Lax; Max-Age=0"
     );
 
     res.json({
