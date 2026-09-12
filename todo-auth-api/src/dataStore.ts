@@ -33,3 +33,9 @@ export function findUserByUsername(username: string): User | undefined {
     return data.users.find(user => user.username === username);
 }   
 
+export function findUserById(id: number): User | undefined {
+    const data = readDatabase();
+
+    return data.users.find(user => user.id === id);
+}
+

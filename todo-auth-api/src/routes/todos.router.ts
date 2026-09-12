@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { getNextId, readDatabase, writeDatabase } from "../dataStore.js";
+import { jwtAuth } from "../auth/jwtAuth.js";
 
 const router = Router();
+
+router.use(jwtAuth);
 
 router.get("/", (req, res) => {
     const data = readDatabase();
