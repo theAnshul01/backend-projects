@@ -10,8 +10,17 @@ router.use(sessionAuth);
 router.get("/", (req, res) => {
     const data = readDatabase();
 
+    const todos = data.todos.filter(todo => todo.userId === req.user!.id);
+
+    if(todos.length === 0){
+        res.status(200).json({
+            message: "No todo item found."
+        });
+        return;
+    }
+
     res.json({
-        todos: data.todos,
+        todos,
     })
 })
 
@@ -23,6 +32,7 @@ router.post("/", (req, res) => {
         title: req.body.title,
         description: req.body.description,
         completed: false,
+        userId: req.user!.id,
     }
 
     data.todos.push(todo);
@@ -40,7 +50,14 @@ router.patch("/:id", (req, res) => {
     const data = readDatabase();
     const todo = data.todos.find(t => t.id === id);
     if (!todo) {
-        res.json({ "error": "todo item not found" });
+        res.status(404).json({ "error": "todo item not found" });
+        return;
+    }
+
+    if(todo.userId !== req.user!.id){
+        res.status(403).json({
+            error: "You are not allowed to modify this todo"
+        });
         return;
     }
 
@@ -58,9 +75,18 @@ router.delete("/:id", (req, res) => {
     const data = readDatabase();
     const idx = data.todos.findIndex(d => d.id === id);
     if (idx === -1) {
-        res.json({ "error": "todo item not found" })
+        res.status(404).json({ "error": "todo item not found" })
         return;
     }
+
+    const todo = data.todos[idx];
+    if (todo!.userId !== req.user!.id) {
+        res.status(403).json({
+            error: "You are not allowed to delete this todo"
+        });
+        return;
+    }
+
     data.todos.splice(idx, 1);
     writeDatabase(data)
     res.json({
