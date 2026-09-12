@@ -10,5 +10,5 @@ export interface Session {
 export interface Database {
     users: User[],
     todos: Todo[],
-    sessions: unknown[],
+    sessions: Session[],
 }
