@@ -10,7 +10,7 @@ router.use(sessionAuth);
 router.get("/", (req, res) => {
     const data = readDatabase();
 
-    const todos = data.todos.filter(todo => todo.userId === req.user!.id);
+    let todos = data.todos.filter(todo => todo.userId === req.user!.id);
 
     if(todos.length === 0){
         res.status(200).json({
@@ -19,9 +19,28 @@ router.get("/", (req, res) => {
         return;
     }
 
+    if(req.query.completed !== undefined){
+        const completed = req.query.completed === "true";
+
+        todos = todos.filter(todo => todo.completed === completed);
+    }
+
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 10);
+
+    const total = todos.length;
+
+    const start = (page - 1) * limit;
+    const end = start + limit;
+
+    const paginatedTodos = todos.slice(start, end);
+
     res.json({
-        todos,
-    })
+        todos: paginatedTodos,
+        page,
+        limit,
+        total
+    });
 })
 
 router.post("/", (req, res) => {
