@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { getNextId, readDatabase, writeDatabase } from "../dataStore.js";
-// import { jwtAuth } from "../auth/jwtAuth.js";
-import { sessionAuth } from "../auth/sessionAuth.js";
+import { jwtAuth } from "../auth/jwtAuth.js";
+// import { sessionAuth } from "../auth/sessionAuth.js";
 
 const router = Router();
 
-router.use(sessionAuth);
+router.use(jwtAuth);
 
 router.get("/", (req, res) => {
     const data = readDatabase();

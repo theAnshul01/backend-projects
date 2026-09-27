@@ -1,8 +1,7 @@
 import { Router } from "express";
-import { getNextId, readDatabase, writeDatabase } from "../dataStore.js";
+import { findUserById, getNextId, readDatabase, writeDatabase, findUserByUsername } from "../dataStore.js";
 import { hashPassword, verifyPassword } from "../auth/password.js";
-import { generateToken } from "../auth/jwt.js";
-import { findUserByUsername } from "../dataStore.js";
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../auth/jwt.js";
 import { createSession, deleteSession } from "../auth/session.js";
 
 const router = Router();
@@ -73,11 +72,101 @@ router.post("/login", (req, res) => {
         return;
     }
 
-    const token = generateToken(user);
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    const isProduction = process.env.NODE_ENV === "production";
+
+    const cookie = [
+        `refreshToken=${refreshToken}`,
+        "HttpOnly",
+        "SameSite=Lax",
+        "Max-Age=604800",
+        ...(isProduction ? ["Secure"] : [])
+    ].join("; ");
+
+    res.setHeader("Set-Cookie", cookie);
+
 
     res.json({
-        accessToken: token,
+        accessToken,
     });
+})
+
+router.post("/refresh", (req, res) => {
+    const cookieHeader = req.headers.cookie;
+
+    if(!cookieHeader){
+        res.status(401).json({
+            error: "Refresh token required",
+        });
+        return;
+    }
+
+    const cookies = cookieHeader.split(";");
+
+    let refreshToken: string | undefined;
+
+    for(const cookie of cookies){
+        const [name, value] = cookie.trim().split("=");
+
+        if(name === "refreshToken"){
+            refreshToken = value;
+            break;
+        }
+    }
+
+    if(!refreshToken){
+        res.status(401).json({
+            error: "Refresh token not found",
+        });
+        return;
+    }
+
+    try {
+        const payload = verifyRefreshToken(refreshToken);
+
+        if(typeof payload !== 'object' || payload === null || typeof payload.userId !== 'number'){
+            res.status(401).json({
+                error: "Invalid refresh token",
+            });
+            return;
+        }
+
+        const user = findUserById(payload.userId);
+
+        if(!user){
+            res.status(401).json({
+                error: "user no longer exists",
+            });
+            return;
+        }
+
+        const accessToken = generateAccessToken(user);
+
+        res.json({
+            accessToken,
+        })
+
+    } catch (error) {
+        
+    }
+})
+
+router.post("/logout", (req, res) => {
+    res.setHeader(
+        "Set-Cookie",
+        [
+            "refreshToken=",
+            "HttpOnly",
+            "SameSite=Lax",
+            "Max-Age=0",
+        ].join("; ")
+    );
+
+    res.json({
+        message: "Logout successful",
+    })
 })
 
 router.post("/session/login", (req, res) => {

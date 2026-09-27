@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { verifyToken } from "./jwt.js";
+import { verifyAccessToken } from "./jwt.js";
 import { findUserById, findUserByUsername } from "../dataStore.js";
 
 export function jwtAuth(
@@ -28,9 +28,9 @@ export function jwtAuth(
 
     try {
         
-        const payload = verifyToken(token);
+        const payload = verifyAccessToken(token);
 
-        if(typeof payload !== "object" || !("username" in payload) || typeof payload.username !== "string"){
+        if(typeof payload !== "object" || payload == null || typeof payload.userId !== "number"){
             res.status(401).json({
                 error: "Invalid token",
             });
