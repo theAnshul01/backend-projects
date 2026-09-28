@@ -6,7 +6,7 @@ export function getWeather(req: Request, res: Response){
 
     if(typeof city !== "string" || city.trim() === ""){
         res.status(400).json({
-            error: "City is required"
+            error: "City is required",
         });
         return; 
     }
