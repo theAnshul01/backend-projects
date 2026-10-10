@@ -1,7 +1,7 @@
 import type {Request, Response} from "express";
-import { getWeatherForCity } from "../services/weather.service.js";
+import { CityNotFoundError, getWeatherForCity } from "../services/weather.service.js";
 
-export function getWeather(req: Request, res: Response){
+export async function getWeather(req: Request, res: Response){
     const { city } = req.query;
 
     if(typeof city !== "string" || city.trim() === ""){
@@ -11,8 +11,29 @@ export function getWeather(req: Request, res: Response){
         return; 
     }
 
-    const weather = getWeatherForCity(city);
+    try {
+        const weather = await getWeatherForCity(city);
+        res.status(200).json(weather);
+    } catch (error: unknown) {
+        if (error instanceof CityNotFoundError) {
+            res.status(404).json({
+                error: "City not found",
+            });
+            return;
+        }
 
-    res.status(200).json(weather);
+        if(error instanceof Error && error.message === "OpenWeather unavailable") {
+            res.status(502).json({
+                error: "Weather provider unavailable",
+            });
+            return;
+        }
+
+        res.status(500).json({
+            error: "Internal server error",
+        });
+    }
+
+    
 
 }
