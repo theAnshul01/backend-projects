@@ -20,31 +20,40 @@ export class CityNotFoundError extends Error {
     }
 }
 
-export async function getWeatherForCity(city: string): Promise<WeatherData>{
+export async function getWeatherForCity(
+    city: string
+): Promise<WeatherData> {
     const normalizedCity = city.trim().toLowerCase();
     const cacheKey = `weather:${normalizedCity}`;
 
-    const cachedWeather = await redisClient.get(cacheKey);
+    try {
+        const cachedWeather = await redisClient.get(cacheKey);
 
-    if(cachedWeather !== null){
-        return JSON.parse(cachedWeather) as WeatherData;
+        if (cachedWeather !== null) {
+            try {
+                return JSON.parse(cachedWeather) as WeatherData;
+            } catch {
+                console.warn("Invalid weather cache entry:", cacheKey);
+            }
+        }
+    } catch (error) {
+        console.error("Redis cache read failed:", error);
     }
 
     const locations = await getCoordinates(city);
 
-    if(locations.length === 0){
+    if (locations.length === 0 || !locations[0]) {
         throw new CityNotFoundError();
     }
 
     const location = locations[0];
 
-    if(!location){
-        throw new CityNotFoundError();
-    }
+    const weather = await getCurrentWeather(
+        location.lat,
+        location.lon
+    );
 
-    const weather = await getCurrentWeather(location.lat, location.lon);
-
-    const result: WeatherData =  {
+    const result: WeatherData = {
         city: weather.name,
         country: weather.sys.country,
         temperature: weather.main.temp,
@@ -52,11 +61,17 @@ export async function getWeatherForCity(city: string): Promise<WeatherData>{
         humidity: weather.main.humidity,
         description: weather.weather[0]?.description ?? "Unknown",
         windSpeed: weather.wind.speed,
-    }
+    };
 
-    await redisClient.set(cacheKey, JSON.stringify(result), {
-        EX: CACHE_TTL_SECONDS,
-    });
+    try {
+        await redisClient.set(
+            cacheKey,
+            JSON.stringify(result),
+            { EX: CACHE_TTL_SECONDS }
+        );
+    } catch (error) {
+        console.error("Redis cache write failed:", error);
+    }
 
     return result;
 }
