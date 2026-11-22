@@ -1,5 +1,7 @@
 import express from "express";
 import type { Request, Response } from "express";
+import { getCache, setCache } from "./cache.js";
+import type { CacheEntry } from "./cache.js";
 
 export function createApp(origin: string) {
     const app = express();
@@ -11,6 +13,23 @@ export function createApp(origin: string) {
             const targetUrl = new URL(req.originalUrl, origin);
             const method = req.method;
             const headers = new Headers();
+
+            const cacheKey = `${method}:${targetUrl.toString()}`;
+
+            if(method === "GET") {
+                const cachedResponse = getCache(cacheKey);
+
+                if(cachedResponse) {
+                    res.status(cachedResponse.status);
+
+                    cachedResponse.headers.forEach((value, name) => {
+                        res.setHeader(name, value);
+                    })
+
+                    res.setHeader("X-Cache", "HIT");
+                    return res.end(cachedResponse.body);
+                }
+            }
 
             for (const [name, value] of Object.entries(req.headers)) {
                 if (
@@ -47,6 +66,29 @@ export function createApp(origin: string) {
             const body = Buffer.from(
                 await upstreamResponse.arrayBuffer()
             );
+            
+            const cacheHeaders = new Headers();
+
+            upstreamResponse.headers.forEach((value, name) => {
+                if(!["connection", "transfer-encoding", "content-length", "content-encoding"].includes(name.toLowerCase())){
+                    cacheHeaders.set(name, value);
+                }
+            })
+            
+
+            if(method === "GET" && upstreamResponse.ok) {
+                
+                const cacheEntry: Omit<CacheEntry, "expiresAt"> = {
+                    status: upstreamResponse.status,
+                    headers: cacheHeaders,
+                    body
+                }
+
+                setCache(cacheKey, cacheEntry);
+            }
+            
+
+            res.setHeader("X-Cache", "MISS");
             res.end(body);
         } catch (error) {
             console.error("Proxy request failed:", error);
