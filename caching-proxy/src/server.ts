@@ -1,12 +1,20 @@
 import express from "express";
 import type { Request, Response } from "express";
-import { getCache, setCache } from "./cache.js";
+import { clearCache, getCache, setCache } from "./cache.js";
 import type { CacheEntry } from "./cache.js";
 
 export function createApp(origin: string) {
     const app = express();
 
     app.use(express.json());
+
+    app.delete("/_cache", (req: Request, res: Response) => {
+        clearCache();
+
+        res.status(200).json({
+            message: "Cache cleared successfully"
+        });
+    })
 
     app.use(async (req: Request, res: Response) => {
         try {

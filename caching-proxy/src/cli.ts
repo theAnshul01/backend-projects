@@ -57,4 +57,27 @@ program
         }
     )
 
+program
+    .option("--clear-cache", "Clear the cache")
+    .option("-p, --port <port>", "Proxy server port", parsePort, 3000)
+    .action(async (options: { clearCache?: boolean, port: number}) => {
+        if (options.clearCache) {
+            try {
+                
+                const response = await fetch(`http://localhost:${options.port}/_cache`, {
+                    method: "DELETE"
+                })
+
+                if(!response.ok) {
+                    throw new Error(`Server returned ${response.status}`);
+                }
+
+                console.log("Cache cleared successfully");
+            } catch {
+                console.error("Could not clear cache. Is the proxy running ?");
+                process.exitCode = 1;
+            }
+        }
+    })
+
 await program.parseAsync(process.argv);
