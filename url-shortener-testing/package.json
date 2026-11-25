@@ -1,0 +1,17 @@
+{
+  "name": "url-shortener-testing",
+  "version": "1.0.0",
+  "description": "a project for practicing testing",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "vitest": "^5.1.2"
+  }
+}
